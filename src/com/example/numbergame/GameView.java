@@ -148,6 +148,8 @@ public class GameView extends View {
     
 	public GameView(Context context) {
 		super(context);
+		setClickable(true);
+		setFocusable(true);
 	    baseBoard = new BaseBoard();
 // alert dialog builder
 	    aleartDialog= new AlertDialog.Builder((Activity)getContext());

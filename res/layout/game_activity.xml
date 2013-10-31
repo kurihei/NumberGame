@@ -19,12 +19,12 @@
 
    </LinearLayout>
 
-    <LinearLayout
+    <SurfaceView
         android:id="@+id/gamev"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="0.10"
         android:orientation="vertical" >
 
-   </LinearLayout>
+   </SurfaceView>
 </LinearLayout>
