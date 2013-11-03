@@ -11,14 +11,13 @@ import android.widget.Button;
 public class MainActivity extends Activity implements OnClickListener{
 	
 	Button startButton;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		startButton = (Button) findViewById(R.id.button1);
 		startButton.setOnClickListener(this);
-		
 	}
 
 	@Override
@@ -36,7 +35,6 @@ public class MainActivity extends Activity implements OnClickListener{
 //			intent.putExtra("org.jpn.techbooster.demo.intent.testString", "!TEST STRING!");
 			startActivity(intent);
 		}
-		
 	}
 
 }
