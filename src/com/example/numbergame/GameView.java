@@ -137,10 +137,6 @@ public class GameView extends View {
 			for(int i=0; i<totalPanel;i++){
 				panelArray.get(i).panelBM = bmGifArray.get(panelArray.get(i).assignNumber-1);
 			}
-// setup chronometer
-			chronometer = (Chronometer)((Activity)getContext()).findViewById(R.id.chronometer1);
-			chronometer.setBase(SystemClock.elapsedRealtime());
-			chronometer.start();
 		}
 	}
     

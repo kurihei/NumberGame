@@ -3,7 +3,6 @@ package com.example.numbergame;
 import java.util.ArrayList;
 import java.util.Random;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -14,7 +13,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.os.SystemClock;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -30,8 +34,11 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
    	private final int totalPanel = 25;
    	BaseBoard baseBoard;
    	AlertDialog.Builder aleartDialog;
-    private final Bitmap IMG_CLEAR = BitmapFactory.decodeResource(res, R.drawable.clear);	static final long FPS = 10;
+    private final Bitmap IMG_CLEAR = BitmapFactory.decodeResource(res, R.drawable.clear);
+    static final long FPS = 20;
 	static final long FRAME_TIME = 1000 / FPS;
+	SoundPool soundPool;
+	int sound_open, sound_clear;
 
 	private class BaseBoard{		
 		private class NumPanel{
@@ -52,7 +59,6 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 		private int nextNum;
 		Chronometer chronometer;
 
-		
 // constructor
 		BaseBoard(){
 			nextNum=1;
@@ -147,55 +153,42 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 			for(int i=0; i<totalPanel;i++){
 				panelArray.get(i).panelBM = bmGifArray.get(panelArray.get(i).assignNumber-1);
 			}
-// setup chronometer
-			chronometer = (Chronometer)((Activity)getContext()).findViewById(R.id.chronometer1);
-			chronometer.setBase(SystemClock.elapsedRealtime());
-			chronometer.start();
 		}
 	}
 
-	public GameSurfaceView(Context context, SurfaceView sv) {
-		super(context);
-		surfaceHolder = sv.getHolder();
-		surfaceHolder.addCallback(this);
-		// TODO 自動生成されたコンストラクター・スタブ
-	}
-/*	public GameSurfaceView(Context context) {
-		super(context);
+	public GameSurfaceView(Context context, AttributeSet attrs) {
+		super(context, attrs);
 		surfaceHolder = getHolder();
-		if(surfaceHolder == null){
-			Log.d("MyDEBUG","surfaceHolder == null");
-		}
 		surfaceHolder.addCallback(this);
+		baseBoard = new BaseBoard();
 		setFocusable(true);
-		requestFocus();
-		// TODO 自動生成されたコンストラクター・スタブ
-	}*/
+		soundPool = new SoundPool(2,AudioManager.STREAM_MUSIC,0);
+		sound_open = soundPool.load(getContext(),R.raw.panelopen,0);
+		sound_clear = soundPool.load(getContext(),R.raw.clear,0);
+	}
 
 	@Override
 	public void run() {
 		// TODO 自動生成されたメソッド・スタブ
-		Canvas canvas = null;
+//		Canvas canvas = null;
 		Paint paint = new Paint();
 		long loopCount = 0;
 		long waitTime = 0;
+		long pastTime = 0;
 		long startTime = System.currentTimeMillis();
 		Bitmap drawBm, drawBitmap2;
 
 		while(thread != null){
-			try{
-				loopCount++;
-//				Log.d("MyDEBUG","lockCanvas!");
-//				canvas = this.surfaceHolder.lockCanvas();
-				canvas = getHolder().lockCanvas();
-				if(canvas == null){
-//					Log.d("MyDEBUG","canvas == null");
-					surfaceHolder.unlockCanvasAndPost(canvas);
-					continue;
-				}
-				Log.d("MyDEBUG", "end of lockCanvas");
-				canvas.drawColor(Color.BLACK);
-				Log.d("MyDEBUG", "end of drawColor");
+			
+			if(surfaceHolder != null){
+				Canvas canvas = surfaceHolder.lockCanvas();
+	            if(canvas!=null){
+	            	try{
+	            		synchronized(surfaceHolder){
+	            			loopCount++;
+	            			Log.d("MyDEBUG", "end of lockCanvas");
+	            			canvas.drawColor(Color.BLACK);
+	            			Log.d("MyDEBUG", "end of drawColor");
 /*				Matrix matrix = new Matrix();
 				matrix.postRotate(5 * (loopCount % 72), 40,40);
 				matrix.preScale((float)(1/1.42), (float)(1/1.42));
@@ -210,40 +203,62 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 					drawBitmap2 = Bitmap.createBitmap(drawBitmap, 0,0,80,80,matrix2,true);
 					canvas.drawBitmap(drawBitmap2, 200,200,paint);
 				}*/
-                Log.d("MyDEBUG", "starting loop!");
-				for(int i=0;i<totalPanel;i++){
-					Log.d("MyDEBUG","looping --" + i);
-					if(baseBoard.panelArray.get(i).check == false){
-						canvas.drawBitmap(baseBoard.panelArray.get(i).panelBM, 
-								baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
-								,paint);
-					}else if(baseBoard.panelArray.get(i).check == true && baseBoard.panelArray.get(i).countdown != 0){
-						Matrix matrix = new Matrix();
-						matrix.postRotate(5*(baseBoard.panelArray.get(i).countdown%72),40,40);
-						matrix.preScale((float)(1/1.42), (float)(1/1.42));
-						drawBm = Bitmap.createBitmap(baseBoard.panelArray.get(i).panelBM, 0,0,80,80,matrix,true);
-						canvas.drawBitmap(drawBm,baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
-								,paint);
-						baseBoard.panelArray.get(i).countdown--;
-					}else{
-						canvas.drawBitmap(IMG_CLEAR, 
-								baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
-								,paint);
-					}
-				}
-				Log.d("MyDEBUG","unlockCanvas!");
-				surfaceHolder.unlockCanvasAndPost(canvas);
-				waitTime = (loopCount * FRAME_TIME) 
-				- System.currentTimeMillis() + startTime;
-				Log.d("MyDEBUG"," - "+System.currentTimeMillis()+" - "+startTime);
-				if( waitTime > 0 ){
-					Log.d("MyDEBUG","wait time="+waitTime*10000);
-					Thread.sleep(waitTime);
-				
-				}
-			}catch(Exception e){
-				Log.d("MyDEBUG","exception!!!!");
-				e.printStackTrace();
+	            			Log.d("MyDEBUG", "starting loop!");
+	            			for(int i=0;i<totalPanel;i++){
+	            				Log.d("MyDEBUG","looping --" + i);
+	            				if(baseBoard.panelArray.get(i).check == false){
+	            					canvas.drawBitmap(baseBoard.panelArray.get(i).panelBM, 
+	            							baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
+	            							,paint);
+	            				}else if(baseBoard.panelArray.get(i).check == true && baseBoard.panelArray.get(i).countdown != 0){
+	            					Matrix matrix = new Matrix();
+	            					matrix.postRotate(5*(baseBoard.panelArray.get(i).countdown%72),40,40);
+	            					matrix.preScale((float)(1/1.42), (float)(1/1.42));
+	            					drawBm = Bitmap.createBitmap(baseBoard.panelArray.get(i).panelBM, 0,0,80,80,matrix,true);
+	            					canvas.drawBitmap(drawBm,baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
+	            							,paint);
+	            					baseBoard.panelArray.get(i).countdown--;
+	            				}else{
+	            					canvas.drawBitmap(IMG_CLEAR, 
+	            						baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
+	            						,paint);
+	            				}
+	            			}
+		            		pastTime = System.currentTimeMillis()-startTime; 
+		            		String timeString = String.format("TIME :%.3f",pastTime);
+		            		Paint textPaint = new Paint();
+		            		textPaint.setStyle(Style.FILL);
+		            		textPaint.setTextSize(100);
+		            		textPaint.setAntiAlias(true);
+//		            		paint.setTextSize(56);
+		            		textPaint.setColor(Color.YELLOW);
+//		            		paint.setColor(Color.WHITE);
+//		            		canvas.drawText(timeString, 0, 0, textPaint);
+//		            		canvas.drawText("dadada", 0, 0, paint);
+		            		canvas.save();
+		            		canvas.drawText("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, 100, textPaint);
+		            		canvas.restore();
+	            		}
+	            	}catch(Exception e){
+						Log.d("MyDEBUG","exception!!!!");
+						e.printStackTrace();
+		   
+	            	}finally{
+	            		surfaceHolder.unlockCanvasAndPost(canvas);
+            			waitTime = (loopCount * FRAME_TIME) 
+            			- System.currentTimeMillis() - startTime;
+            			Log.d("MyDEBUG"," - "+System.currentTimeMillis()+" - "+startTime);
+            			if( waitTime > 0 ){
+            				Log.d("MyDEBUG","wait time="+waitTime);
+            				try {
+								Thread.sleep(waitTime);
+							} catch (InterruptedException e) {
+								// TODO 自動生成された catch ブロック
+								e.printStackTrace();
+							}	
+            			}	
+	            	}
+	            }
 			}
 		}
 	}
@@ -265,16 +280,18 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 				if(baseBoard.panelArray.get(j).assignNumber==baseBoard.nextNum){
 					baseBoard.nextNum++;
 					baseBoard.panelArray.get(j).check = true;
+					if(baseBoard.nextNum!=26){
+						soundPool.play(sound_open,1.0f, 1.0f, 0,0,1.0f);
+					}
 				}
 				if(baseBoard.nextNum==26){
 // Game End	
-//					invalidate();
-					baseBoard.chronometer.stop();
-					aleartDialog.show();
-//					((Activity)getContext()).finish();
+//					baseBoard.chronometer.stop();
+//					aleartDialog.show();
+					soundPool.play(sound_clear,2.0f, 2.0f, 0,0,1.0f);				
+					((Activity)getContext()).finish();
 				}
 			}
-//			invalidate();
 			break;
 		}
 		return true;

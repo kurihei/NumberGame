@@ -17,8 +17,8 @@ public class GameActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.game_activity);
  //       Log.d("MyDebug", "end of setContentView");
-        mSv = (SurfaceView)findViewById(R.id.gamev);
-        gSv = new GameSurfaceView(this, mSv);
+ //       mSv = (SurfaceView)findViewById(R.id.gamev);
+ //       gSv = new GameSurfaceView(this, mSv);
  //       setContentView(new GameSurfaceView(this));
 	}
 }
