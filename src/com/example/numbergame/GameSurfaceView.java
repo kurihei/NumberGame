@@ -1,5 +1,6 @@
 package com.example.numbergame;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -17,6 +18,7 @@ import android.graphics.Paint.Style;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -24,6 +26,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Chronometer;
+import android.content.Intent;
+
 
 public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHolder.Callback{
 
@@ -39,6 +43,9 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 	static final long FRAME_TIME = 1000 / FPS;
 	SoundPool soundPool;
 	int sound_open, sound_clear;
+//	Long resultTime;
+	Long timeStart;
+	Boolean THREAD_LOOP;
 
 	private class BaseBoard{		
 		private class NumPanel{
@@ -165,6 +172,10 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 		soundPool = new SoundPool(2,AudioManager.STREAM_MUSIC,0);
 		sound_open = soundPool.load(getContext(),R.raw.panelopen,0);
 		sound_clear = soundPool.load(getContext(),R.raw.clear,0);
+		THREAD_LOOP = false;
+//		resultTime = (long) 0;
+		timeStart = System.currentTimeMillis();
+
 	}
 
 	@Override
@@ -178,17 +189,16 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 		long startTime = System.currentTimeMillis();
 		Bitmap drawBm, drawBitmap2;
 
-		while(thread != null){
-			
+		while(THREAD_LOOP == true){			
 			if(surfaceHolder != null){
 				Canvas canvas = surfaceHolder.lockCanvas();
 	            if(canvas!=null){
 	            	try{
 	            		synchronized(surfaceHolder){
 	            			loopCount++;
-	            			Log.d("MyDEBUG", "end of lockCanvas");
+//	            			Log.d("MyDEBUG", "end of lockCanvas");
 	            			canvas.drawColor(Color.BLACK);
-	            			Log.d("MyDEBUG", "end of drawColor");
+//	            			Log.d("MyDEBUG", "end of drawColor");
 /*				Matrix matrix = new Matrix();
 				matrix.postRotate(5 * (loopCount % 72), 40,40);
 				matrix.preScale((float)(1/1.42), (float)(1/1.42));
@@ -203,9 +213,9 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 					drawBitmap2 = Bitmap.createBitmap(drawBitmap, 0,0,80,80,matrix2,true);
 					canvas.drawBitmap(drawBitmap2, 200,200,paint);
 				}*/
-	            			Log.d("MyDEBUG", "starting loop!");
+//	            			Log.d("MyDEBUG", "starting loop!");
 	            			for(int i=0;i<totalPanel;i++){
-	            				Log.d("MyDEBUG","looping --" + i);
+//	            				Log.d("MyDEBUG","looping --" + i);
 	            				if(baseBoard.panelArray.get(i).check == false){
 	            					canvas.drawBitmap(baseBoard.panelArray.get(i).panelBM, 
 	            							baseBoard.panelArray.get(i).minx, baseBoard.panelArray.get(i).miny
@@ -225,29 +235,31 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 	            				}
 	            			}
 		            		pastTime = System.currentTimeMillis()-startTime; 
-		            		String timeString = String.format("TIME :%.3f",pastTime);
+		            		SimpleDateFormat sdf = new SimpleDateFormat("mm:ss SSS");
+		            		String timeString = sdf.format(pastTime);
 		            		Paint textPaint = new Paint();
 		            		textPaint.setStyle(Style.FILL);
-		            		textPaint.setTextSize(100);
+		            		textPaint.setTextSize(36);
 		            		textPaint.setAntiAlias(true);
 //		            		paint.setTextSize(56);
-		            		textPaint.setColor(Color.YELLOW);
+		            		textPaint.setColor(Color.WHITE);
 //		            		paint.setColor(Color.WHITE);
-//		            		canvas.drawText(timeString, 0, 0, textPaint);
+		            		canvas.drawText(timeString, 0, 36, textPaint);
 //		            		canvas.drawText("dadada", 0, 0, paint);
-		            		canvas.save();
-		            		canvas.drawText("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, 100, textPaint);
-		            		canvas.restore();
+//		            		canvas.save();
+//		            		canvas.drawText("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", 0, 100, textPaint);
+//		            		canvas.restore();
 	            		}
 	            	}catch(Exception e){
 						Log.d("MyDEBUG","exception!!!!");
 						e.printStackTrace();
-		   
 	            	}finally{
 	            		surfaceHolder.unlockCanvasAndPost(canvas);
             			waitTime = (loopCount * FRAME_TIME) 
             			- System.currentTimeMillis() - startTime;
-            			Log.d("MyDEBUG"," - "+System.currentTimeMillis()+" - "+startTime);
+/*	            		resultTime =  System.currentTimeMillis() - startTime;
+	            		waitTime = (loopCount * FRAME_TIME) -resultTime;*/
+ //           			Log.d("MyDEBUG"," - "+System.currentTimeMillis()+" - "+startTime);
             			if( waitTime > 0 ){
             				Log.d("MyDEBUG","wait time="+waitTime);
             				try {
@@ -255,7 +267,7 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 							} catch (InterruptedException e) {
 								// TODO 自動生成された catch ブロック
 								e.printStackTrace();
-							}	
+							}
             			}	
 	            	}
 	            }
@@ -288,8 +300,14 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 // Game End	
 //					baseBoard.chronometer.stop();
 //					aleartDialog.show();
-					soundPool.play(sound_clear,2.0f, 2.0f, 0,0,1.0f);				
+					soundPool.play(sound_clear,2.0f, 2.0f, 0,0,1.0f);
+					Intent intent = new Intent(getContext(),ResultActivity.class );
+//					Bundle myBundle = new Bundle();
+//					myBundle.putLong("score", System.currentTimeMillis() - timeStart);
+					intent.putExtra("score", System.currentTimeMillis() - timeStart);
+//					intent.putExtra("score", resultTime);
 					((Activity)getContext()).finish();
+					getContext().startActivity(intent);
 				}
 			}
 			break;
@@ -301,21 +319,21 @@ public class GameSurfaceView extends SurfaceView implements Runnable, SurfaceHol
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width,
 			int height) {
-		// TODO 自動生成されたメソッド・スタブ
 		
 	}
 
 	@Override
 	public void surfaceCreated(SurfaceHolder holder) {
-		// TODO 自動生成されたメソッド・スタブ
+		
 		thread = new Thread(this);
+		THREAD_LOOP = true;
 		thread.start();
 		
 	}
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {
-		// TODO 自動生成されたメソッド・スタブ
+		THREAD_LOOP = false;
 		
 	}
 

@@ -26,6 +26,10 @@
             android:name="com.example.numbergame.GameActivity"
             android:label="@string/app_name" >
         </activity>
+        <activity
+            android:name="com.example.numbergame.ResultActivity"
+            android:label="@string/app_name" >
+        </activity>        
     </application>
 
 </manifest>
