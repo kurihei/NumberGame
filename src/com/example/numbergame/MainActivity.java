@@ -47,8 +47,8 @@ public class MainActivity extends Activity implements OnClickListener{
 		startButton.setOnClickListener(this);
 		twitterButton = (Button) findViewById(R.id.twitter_oauth);
 		twitterButton.setOnClickListener(this);
-//		sharedPref = getSharedPreferences("pref", MODE_WORLD_READABLE|MODE_WORLD_WRITEABLE);
-		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+		sharedPref = getSharedPreferences("pref", MODE_WORLD_READABLE|MODE_WORLD_WRITEABLE);
+//		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		// temporary user name = "YOU" 
 	    prefEditor = sharedPref.edit();
 //		editor.putString("user", "YOU");
@@ -86,7 +86,7 @@ public class MainActivity extends Activity implements OnClickListener{
 		}else if(v==twitterButton){
 			if(!TwitterUtils.hasAccessToken(this)){
 		        mCallbackURL = getString(R.string.twitter_callback_url);
-		        mTwitter = TwitterUtils.getTwitterInstance(this);
+		        mTwitter = TwitterUtils.getTwitterInstance(getApplicationContext());
 				startAuthorize();
 			}else{
 				Toast.makeText(this, "You already registered "+sharedPref.getString("user", "YOu"), Toast.LENGTH_SHORT).show();
@@ -154,10 +154,11 @@ public class MainActivity extends Activity implements OnClickListener{
                     // 認証成功！
                     showToast("認証成功！");
                     successOAuth(retTwitter.actk);
-//                	sharedPref = getSharedPreferences("pref", MODE_WORLD_READABLE | MODE_WORLD_WRITEABLE);
+//                	sharedPref = getApplicationContext().getSharedPreferences("pref", MODE_WORLD_READABLE | MODE_WORLD_WRITEABLE);
 //                	prefEditor = sharedPref.edit();
                 	Log.d("myDEBUG","retTwitter.screenName = " + retTwitter.screenName);
-                    prefEditor.putString("user", retTwitter.screenName);               	
+                    prefEditor.putString("user", retTwitter.screenName);
+                    prefEditor.commit();
                 } else {
                     // 認証失敗。。。
                     showToast("認証失敗。。。");
@@ -168,23 +169,8 @@ public class MainActivity extends Activity implements OnClickListener{
     }
 
     private void successOAuth(AccessToken accessToken) {
-        TwitterUtils.storeAccessToken(this, accessToken);
+        TwitterUtils.storeAccessToken(getApplicationContext(), accessToken);
         String idName="YOU";
-/*        try {
-			idName = mTwitter.getScreenName();
-		} catch (IllegalStateException e) {
-			// TODO 自動生成された catch ブロック
-			Log.d("MyDEBUG","illegal state exception");			
-			e.printStackTrace();
-		} catch (TwitterException e) {
-			// TODO 自動生成された catch ブロック
-			Log.d("MyDEBUG","twitter exception");
-			e.printStackTrace();
-		}
-        prefEditor.putString("user", idName);*/
-//        Intent intent = new Intent(this, MainActivity.class);
-//        startActivity(intent);
-//        finish();
     }
 
     private void showToast(String text) {
